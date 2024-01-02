@@ -1,6 +1,7 @@
 package mate.academy.springboot.repository.impl;
 
 import java.util.List;
+import java.util.Optional;
 import mate.academy.springboot.model.Book;
 import mate.academy.springboot.repository.BookRepository;
 import org.hibernate.Session;
@@ -37,6 +38,14 @@ public class BookRepositoryImpl implements BookRepository {
             if (session != null) {
                 session.close();
             }
+        }
+    }
+
+    @Override
+    public Optional<Book> findBookById(Long id) {
+        try (Session session = sessionFactory.openSession()) {
+            Book book = session.find(Book.class, id);
+            return Optional.ofNullable(book);
         }
     }
 
