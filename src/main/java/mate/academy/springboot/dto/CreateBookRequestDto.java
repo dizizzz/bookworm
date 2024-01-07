@@ -9,9 +9,9 @@ import mate.academy.springboot.validation.Isbn;
 
 @Data
 public class CreateBookRequestDto {
-    @NotNull
+    @NotBlank
     private String title;
-    @NotNull
+    @NotBlank
     private String author;
     @Isbn
     private String isbn;
@@ -20,5 +20,6 @@ public class CreateBookRequestDto {
     private BigDecimal price;
     @NotBlank
     private String description;
+    @NotBlank
     private String coverImage;
 }
