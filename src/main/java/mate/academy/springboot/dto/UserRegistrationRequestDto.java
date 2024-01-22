@@ -6,13 +6,11 @@ import lombok.Data;
 import mate.academy.springboot.validation.FieldMatch;
 import org.hibernate.validator.constraints.Length;
 
-@FieldMatch.List({
-        @FieldMatch(
-                field = "password",
-                fieldMatch = "repeatPassword",
-                message = "Passwords do not match!"
-        )
-})
+@FieldMatch(
+        field = "password",
+        fieldMatch = "repeatPassword",
+        message = "Passwords do not match!"
+)
 @Data
 public class UserRegistrationRequestDto {
     @NotBlank
