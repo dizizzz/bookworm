@@ -1,4 +1,4 @@
-package mate.academy.springboot.service.imlpl;
+package mate.academy.springboot.service.impl;
 
 import java.util.List;
 import java.util.Random;
