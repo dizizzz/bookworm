@@ -1,4 +1,4 @@
-package mate.academy.springboot.dto;
+package mate.academy.springboot.dto.user;
 
 import lombok.Data;
 
