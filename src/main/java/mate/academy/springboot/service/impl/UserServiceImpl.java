@@ -1,8 +1,8 @@
 package mate.academy.springboot.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import mate.academy.springboot.dto.UserRegistrationRequestDto;
-import mate.academy.springboot.dto.UserResponseDto;
+import mate.academy.springboot.dto.user.UserRegistrationRequestDto;
+import mate.academy.springboot.dto.user.UserResponseDto;
 import mate.academy.springboot.exception.RegistrationException;
 import mate.academy.springboot.mapper.UserMapper;
 import mate.academy.springboot.model.User;

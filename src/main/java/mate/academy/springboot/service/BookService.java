@@ -1,15 +1,15 @@
 package mate.academy.springboot.service;
 
 import java.util.List;
-import mate.academy.springboot.dto.BookDto;
-import mate.academy.springboot.dto.BookSearchParameters;
-import mate.academy.springboot.dto.CreateBookRequestDto;
+import mate.academy.springboot.dto.book.BookDto;
+import mate.academy.springboot.dto.book.BookSearchParameters;
+import mate.academy.springboot.dto.book.CreateBookRequestDto;
 import org.springframework.data.domain.Pageable;
 
 public interface BookService {
     BookDto save(CreateBookRequestDto requestDto);
 
-    List<BookDto> findAll(Pageable pageable);
+    List<BookDto> findAll(String username, Pageable pageable);
 
     BookDto getBookById(Long id);
 

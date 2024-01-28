@@ -1,4 +1,4 @@
-package mate.academy.springboot.dto;
+package mate.academy.springboot.dto.book;
 
 import java.math.BigDecimal;
 import lombok.Data;
