@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-categories-column
+      author: solomia
+      changes:
+        - addColumn:
+            tableName: books
+            columns:
+              - column:
+                  name: categories
+                  type: LONGTEXT

@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-books-categories-relationship
+      author: solomia
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: books_categories
+            baseColumnNames:
+              - book_id
+            referencedTableName: books
+            referencedColumnNames:
+              - id
+            constraintName: FK_books-categories_books
+        - addForeignKeyConstraint:
+            baseTableName: books_categories
+            baseColumnNames:
+              - category_id
+            referencedTableName: categories
+            referencedColumnNames:
+              - id
+            constraintName: FK_books-categories_categories

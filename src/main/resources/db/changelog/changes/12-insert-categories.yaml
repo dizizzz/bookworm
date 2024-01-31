@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-categories
+      author: solomia
+      changes:
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Category 1
+              - column:
+                  name: description
+                  value: Description 1
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: Category 2
+              - column:
+                  name: description
+                  value: Description 2
