@@ -1,7 +1,9 @@
 package mate.academy.springboot.service.impl;
 
 import java.util.List;
-import java.util.Random;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.springboot.dto.book.BookDto;
 import mate.academy.springboot.dto.book.BookSearchParameters;
@@ -9,8 +11,10 @@ import mate.academy.springboot.dto.book.CreateBookRequestDto;
 import mate.academy.springboot.exception.EntityNotFoundException;
 import mate.academy.springboot.mapper.BookMapper;
 import mate.academy.springboot.model.Book;
+import mate.academy.springboot.model.Category;
 import mate.academy.springboot.repository.book.BookRepository;
 import mate.academy.springboot.repository.book.BookSpecificationBuilder;
+import mate.academy.springboot.repository.category.CategoryRepository;
 import mate.academy.springboot.service.BookService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,11 +26,11 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final BookMapper bookMapper;
     private final BookSpecificationBuilder bookSpecificationBuilder;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public BookDto save(CreateBookRequestDto requestDto) {
         Book book = bookMapper.toModel(requestDto);
-        book.setIsbn(String.format("%010d", new Random().nextInt(1000000000)));
         return bookMapper.toDto(bookRepository.save(book));
     }
 
@@ -48,12 +52,18 @@ public class BookServiceImpl implements BookService {
     public BookDto updateBookById(Long id, CreateBookRequestDto requestDto) {
         Book book = bookRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Can't find book by id " + id));
-
-        Book updatedBook = bookMapper.toModel(requestDto);
-
-        updatedBook.setId(id);
-
-        return bookMapper.toDto(bookRepository.save(updatedBook));
+        book.setPrice(requestDto.getPrice());
+        book.setTitle(requestDto.getTitle());
+        book.setAuthor(requestDto.getAuthor());
+        book.setIsbn(requestDto.getIsbn());
+        book.setCoverImage(requestDto.getCoverImage());
+        book.setDescription(requestDto.getDescription());
+        Set<Category> collect = requestDto.getCategoryIds().stream()
+                .map(categoryRepository::findById)
+                .map(Optional::orElseThrow)
+                .collect(Collectors.toSet());
+        book.setCategories(collect);
+        return bookMapper.toDto(bookRepository.save(book));
     }
 
     @Override
@@ -68,6 +78,11 @@ public class BookServiceImpl implements BookService {
                 .stream()
                 .map(bookMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    public List<Book> findAllByCategoriesId(Long id) {
+        return bookRepository.findAllByCategoriesId(id);
     }
 
 }
