@@ -26,6 +26,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
 
+    private ShoppingCart createShoppingCartForUserId(Long userId) {
+        ShoppingCart newShoppingCart = new ShoppingCart();
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new EntityNotFoundException("Can't find user by id " + userId)
+        );
+        newShoppingCart.setUser(user);
+        return shoppingCartRepository.save(newShoppingCart);
+    }
+
     @Override
     public ShoppingCartResponseDto addBook(Long userId, CartItemRequestDto requestDto) {
         Long bookId = requestDto.getBookId();
@@ -33,18 +42,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 () -> new EntityNotFoundException(
                         "Can`t find book by id " + bookId)
         );
-        ShoppingCart shoppingCart = shoppingCartRepository.findByUserId(userId)
-                .orElseGet(
-                        () -> {
-                            ShoppingCart newShoppingCart = new ShoppingCart();
-                            User user = userRepository.findById(userId).orElseThrow(
-                                    () -> new EntityNotFoundException(
-                                            "Can`t find user by id " + userId)
-                            );
-                            newShoppingCart.setUser(user);
-                            return shoppingCartRepository.save(newShoppingCart);
-                        }
-                );
+        ShoppingCart shoppingCart = createShoppingCartForUserId(userId);
 
         CartItem newCartItem = new CartItem();
         newCartItem.setShoppingCart(shoppingCart);
