@@ -4,7 +4,7 @@ databaseChangeLog:
       author: solomia
       changes:
         - insert:
-            tableName: role
+            tableName: roles
             columns:
               - column:
                   name: id
@@ -13,7 +13,7 @@ databaseChangeLog:
                   name: name
                   value: 'USER'
         - insert:
-            tableName: role
+            tableName: roles
             columns:
               - column:
                   name: id

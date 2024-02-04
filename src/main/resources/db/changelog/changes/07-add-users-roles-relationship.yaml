@@ -15,7 +15,7 @@ databaseChangeLog:
             baseTableName: users_roles
             baseColumnNames:
               - role_id
-            referencedTableName: role
+            referencedTableName: roles
             referencedColumnNames:
               - id
             constraintName: FK_users_roles_roles

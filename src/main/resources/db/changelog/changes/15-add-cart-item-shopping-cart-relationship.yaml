@@ -6,6 +6,6 @@ databaseChangeLog:
         - addForeignKeyConstraint:
             baseTableName: cart_items
             baseColumnNames: shopping_cart_id
-            referencedTableName: shopping_cart
+            referencedTableName: shopping_carts
             referencedColumnNames: id
-            constraintName: fk_cart_items_shopping_cart
+            constraintName: fk_cart_items_shopping_carts
