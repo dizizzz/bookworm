@@ -23,4 +23,10 @@ databaseChangeLog:
       file: db/changelog/changes/11-add-books-categories-relationship.yaml
   - include:
       file: db/changelog/changes/12-insert-categories.yaml
+  - include:
+      file: db/changelog/changes/13-create-cart-item-table.yaml
+  - include:
+      file: db/changelog/changes/14-create-shopping-cart-table.yaml
+  - include:
+      file: db/changelog/changes/15-add-cart-item-shopping-cart-relationship.yaml
 
