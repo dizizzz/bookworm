@@ -36,6 +36,61 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ShoppingCartRepository shoppingCartRepository;
 
+    @Override
+    public OrderResponseDto addOrder(Long userId, OrderRequestDto requestDto) {
+        User user = getUser(userId);
+
+        Order order = createOrder(user, requestDto);
+
+        ShoppingCart shoppingCart = getShoppingCart(userId);
+
+        Set<CartItem> cartItems = shoppingCart.getCartItems();
+
+        BigDecimal total = countTotal(cartItems);
+        order.setTotal(total);
+
+        Set<OrderItem> orderItems = createOrderItems(order, cartItems);
+        order.setOrderItems(orderItems);
+
+        saveOrderAndOrderItems(order, orderItems);
+        clearShoppingCart(shoppingCart);
+
+        return orderMapper.toDto(order);
+    }
+
+    @Override
+    public List<OrderResponseDto> findAll(Long userId) {
+        return orderRepository.findAllByUserId(userId).stream()
+                .map(orderMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public OrderResponseDto updateOrderStatus(Long orderId,
+                                              OrderUpdateRequestDto requestDto) {
+        Order order = getOrder(orderId);
+        Status status = Status.valueOf(requestDto.status().toUpperCase());
+        order.setStatus(status);
+        return orderMapper.toDto(orderRepository.save(order));
+    }
+
+    @Override
+    public List<OrderItemResponseDto> findAllOrderItems(Long userId, Long orderId) {
+        Order order = getOrder(userId, orderId);
+        return orderItemRepository.findAllByOrder(order).stream()
+                .map(orderItemsMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public OrderItemResponseDto findOrderItemByIdAndOrderId(Long userId,
+                                                            Long orderId,
+                                                            Long itemId) {
+        getOrder(userId, orderId);
+        OrderItem orderItem = getOrderItem(itemId, orderId);
+        return orderItemsMapper.toDto(orderItem);
+    }
+
     private User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -115,60 +170,5 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Can't find orderItem by id " + itemId
                 ));
-    }
-
-    @Override
-    public OrderResponseDto addOrder(Long userId, OrderRequestDto requestDto) {
-        User user = getUser(userId);
-
-        Order order = createOrder(user, requestDto);
-
-        ShoppingCart shoppingCart = getShoppingCart(userId);
-
-        Set<CartItem> cartItems = shoppingCart.getCartItems();
-
-        BigDecimal total = countTotal(cartItems);
-        order.setTotal(total);
-
-        Set<OrderItem> orderItems = createOrderItems(order, cartItems);
-        order.setOrderItems(orderItems);
-
-        saveOrderAndOrderItems(order, orderItems);
-        clearShoppingCart(shoppingCart);
-
-        return orderMapper.toDto(order);
-    }
-
-    @Override
-    public List<OrderResponseDto> findAll(Long userId) {
-        return orderRepository.findAllByUserId(userId).stream()
-                .map(orderMapper::toDto)
-                .toList();
-    }
-
-    @Override
-    public OrderResponseDto updateOrderStatus(Long orderId,
-                                              OrderUpdateRequestDto requestDto) {
-        Order order = getOrder(orderId);
-        Status status = Status.valueOf(requestDto.status().toUpperCase());
-        order.setStatus(status);
-        return orderMapper.toDto(orderRepository.save(order));
-    }
-
-    @Override
-    public List<OrderItemResponseDto> findAllOrderItems(Long userId, Long orderId) {
-        Order order = getOrder(userId, orderId);
-        return orderItemRepository.findAllByOrder(order).stream()
-                .map(orderItemsMapper::toDto)
-                .toList();
-    }
-
-    @Override
-    public OrderItemResponseDto findOrderItemByIdAndOrderId(Long userId,
-                                                            Long orderId,
-                                                            Long itemId) {
-        getOrder(userId, orderId);
-        OrderItem orderItem = getOrderItem(itemId, orderId);
-        return orderItemsMapper.toDto(orderItem);
     }
 }
