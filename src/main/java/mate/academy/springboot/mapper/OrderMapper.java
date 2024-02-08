@@ -8,5 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(config = MapperConfig.class)
 public interface OrderMapper {
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "orderItems", target = "orderItems")
     OrderResponseDto toDto(Order order);
 }
