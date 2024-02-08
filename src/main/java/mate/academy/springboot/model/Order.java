@@ -36,7 +36,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar",
-            name = "status", unique = true, nullable = false)
+            name = "status", nullable = false)
     private Status status;
 
     @Column(nullable = false)
