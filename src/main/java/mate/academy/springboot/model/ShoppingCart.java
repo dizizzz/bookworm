@@ -34,4 +34,9 @@ public class ShoppingCart {
             mappedBy = "shoppingCart",
             fetch = FetchType.EAGER)
     private Set<CartItem> cartItems = new HashSet<>();
+
+    public void clearCart() {
+        cartItems.clear();
+    }
+
 }
