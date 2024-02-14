@@ -146,7 +146,7 @@ class BookControllerTest {
                 .setCoverImage("image.jpg");
 
         MvcResult result = mockMvc.perform(
-                        put("/book/{id}", updateId)
+                        put("/books/{id}", updateId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(updateBook))
                 )
