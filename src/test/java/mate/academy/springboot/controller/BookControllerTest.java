@@ -1,7 +1,9 @@
 package mate.academy.springboot.controller;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +17,6 @@ import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import mate.academy.springboot.dto.book.BookDto;
 import mate.academy.springboot.dto.book.CreateBookRequestDto;
-import mate.academy.springboot.dto.category.CategoryDto;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -98,7 +99,6 @@ class BookControllerTest {
                 .setId(1L).setTitle("Title 3").setAuthor("Author 3")
                 .setPrice(BigDecimal.valueOf(123)).setDescription("Description 3")
                 .setCoverImage("image.jpg"));
-
 
         MvcResult result = mockMvc.perform(
                         post("/books")
