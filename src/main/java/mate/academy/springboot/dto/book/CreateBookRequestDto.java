@@ -7,9 +7,11 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.Data;
+import lombok.experimental.Accessors;
 import mate.academy.springboot.validation.Isbn;
 
 @Data
+@Accessors(chain = true)
 public class CreateBookRequestDto {
     @NotBlank
     private String title;
