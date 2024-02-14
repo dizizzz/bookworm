@@ -3,7 +3,9 @@ package mate.academy.springboot.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -134,36 +136,6 @@ class BookServiceTest {
         String actual = exception.getMessage();
         Assertions.assertEquals(expected, actual);
     }
-
-//    @Test
-//    @DisplayName("""
-//    Verify the correct book was returned when updated book
-//     """)
-//    void updateBookById() {
-//        requestDto = new CreateBookRequestDto();
-//        requestDto.setTitle("Title updated");
-//        requestDto.setAuthor("Author updated");
-//        requestDto.setPrice(BigDecimal.valueOf(123));
-//        requestDto.setIsbn("1248752418855");
-//        requestDto.setDescription("Description updated");
-//        requestDto.setCoverImage("image.jpg");
-//
-//        category = new Category();
-//        category.setId(1L);
-//        category.setName("Category 1");
-//        category.setDescription("Description 1");
-//        when(categoryRepository.findById(anyLong())).thenReturn(Optional.of(category));
-//
-//        requestDto.setCategoryIds(List.of(category.getId()));
-//
-//        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
-//        when(bookRepository.save(any())).thenReturn(book);
-//
-//        BookDto updateBookById = bookService.updateBookById(1L, requestDto);
-//
-//        verify(bookRepository, times(1)).findById(1L);
-//        assertEquals(requestDto.getTitle(), updateBookById.getTitle());
-//    }
 
     @Test
     @DisplayName("")

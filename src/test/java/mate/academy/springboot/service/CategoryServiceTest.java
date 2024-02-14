@@ -99,26 +99,6 @@ class CategoryServiceTest {
         assertEquals(category.getId(), actual.getId());
     }
 
-//    @Test
-//    @DisplayName("""
-//    Verify the correct book was returned when updated book
-//     """)
-//    void update() {
-//        Long categoryId = 1L;
-//        String updatedDescription = "Description updated";
-//
-//        category.setDescription(updatedDescription);
-//        categoryDto.setDescription(updatedDescription);
-//
-//        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-//        when(categoryMapper.toEntity(categoryDto)).thenReturn(category);
-//        when(categoryRepository.save(category)).thenReturn(category);
-//
-//        CategoryDto actual = categoryService.update(categoryId, categoryDto);
-//
-//        assertEquals(updatedDescription, actual.getDescription());
-//    }
-
     @Test
     @DisplayName("Verify the correct book was returned when updated book")
     void deleteById_VerifyDeletion() {
