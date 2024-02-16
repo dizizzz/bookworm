@@ -3,6 +3,7 @@ package mate.academy.springboot.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,13 +14,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import mate.academy.springboot.dto.book.BookDto;
-import mate.academy.springboot.dto.book.BookSearchParameters;
 import mate.academy.springboot.dto.book.CreateBookRequestDto;
 import mate.academy.springboot.exception.EntityNotFoundException;
 import mate.academy.springboot.mapper.BookMapper;
 import mate.academy.springboot.model.Book;
 import mate.academy.springboot.model.Category;
 import mate.academy.springboot.repository.book.BookRepository;
+import mate.academy.springboot.repository.category.CategoryRepository;
 import mate.academy.springboot.service.impl.BookServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,11 +45,13 @@ class BookServiceTest {
     @InjectMocks
     private BookServiceImpl bookService;
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
     private Book book;
     private BookDto bookDto;
     private CreateBookRequestDto requestDto;
     private Category category;
-    private BookSearchParameters searchParameters;
 
     @BeforeEach
     public void setup() {
@@ -79,13 +82,13 @@ class BookServiceTest {
     @Test
     @DisplayName("Verify the correct book was saved")
     public void saveBook_WithValidValue_ReturnBookDto() {
-        requestDto = new CreateBookRequestDto();
-        requestDto.setTitle("Title");
-        requestDto.setAuthor("Author");
-        requestDto.setPrice(BigDecimal.valueOf(123));
-        requestDto.setIsbn("1248752418855");
-        requestDto.setDescription("Description");
-        requestDto.setCoverImage("image.jpg");
+        requestDto = new CreateBookRequestDto()
+                  .setTitle("Title")
+                  .setAuthor("Author")
+                  .setPrice(BigDecimal.valueOf(123))
+                  .setIsbn("1248752418855")
+                  .setDescription("Description")
+                  .setCoverImage("image.jpg");
 
         when(bookRepository.save(book)).thenReturn(book);
         when(bookMapper.toDto(book)).thenReturn(bookDto);
@@ -138,8 +141,8 @@ class BookServiceTest {
     }
 
     @Test
-    @DisplayName("")
-    void deleteById_VerifyDeletion() {
+    @DisplayName("Given correct id, check if book is deleted")
+    void deleteById_WithValidBookId_VerifyDeletion() {
         Long bookId = 1L;
         bookService.deleteById(bookId);
         verify(bookRepository, times(1)).deleteById(bookId);

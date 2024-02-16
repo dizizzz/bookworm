@@ -1,6 +1,7 @@
 package mate.academy.springboot.controller;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -55,7 +56,15 @@ class CategoryControllerTest {
             connection.setAutoCommit(true);
             ScriptUtils.executeSqlScript(
                     connection,
+                    new ClassPathResource("database/books/add-books.sql")
+            );
+            ScriptUtils.executeSqlScript(
+                    connection,
                     new ClassPathResource("database/categories/add-categories.sql")
+            );
+            ScriptUtils.executeSqlScript(
+                    connection,
+                    new ClassPathResource("database/books/add-value-to-books-categories-table.sql")
             );
         }
     }
@@ -73,7 +82,15 @@ class CategoryControllerTest {
             connection.setAutoCommit(true);
             ScriptUtils.executeSqlScript(
                     connection,
+                    new ClassPathResource("database/books/remove-books-categories.sql")
+            );
+            ScriptUtils.executeSqlScript(
+                    connection,
                     new ClassPathResource("database/categories/remove-categories.sql")
+            );
+            ScriptUtils.executeSqlScript(
+                    connection,
+                    new ClassPathResource("database/books/remove-books.sql")
             );
         }
     }
@@ -81,17 +98,17 @@ class CategoryControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Test
     @Sql(
-            scripts = "classpath:database/categories/remove-categories.sql",
+            scripts = "classpath:database/categories/remove-categories-by-id.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
     )
     @DisplayName("Create a new category")
     void createCategory_ValidRequestDto_Success() throws Exception {
         CategoryDto requestDto = new CategoryDto()
-                .setName("Category")
-                .setDescription("Description");
+                .setName("Category 4")
+                .setDescription("Description 4");
 
         CategoryDto expected = new CategoryDto()
-                .setId(1L)
+                .setId(4L)
                 .setName(requestDto.getName())
                 .setDescription(requestDto.getDescription());
 
@@ -112,7 +129,7 @@ class CategoryControllerTest {
         EqualsBuilder.reflectionEquals(expected, actual,"id");
     }
 
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get all categories")
     void getAll_GivenCategories_ShouldReturnAllCategories() throws Exception {
@@ -121,11 +138,9 @@ class CategoryControllerTest {
                 .setId(1L).setName("Category 1").setDescription("Description 1"));
         expected.add(new CategoryDto()
                 .setId(2L).setName("Category 2").setDescription("Description 2"));
-        expected.add(new CategoryDto()
-                .setId(3L).setName("Category 3").setDescription("Description 3"));
 
         MvcResult result = mockMvc.perform(
-                        post("/categories")
+                        get("/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
@@ -134,18 +149,18 @@ class CategoryControllerTest {
         CategoryDto[] actual = objectMapper.readValue(
                 result.getResponse().getContentAsByteArray(), CategoryDto[].class
         );
-        Assertions.assertEquals(3,actual.length);
+        Assertions.assertEquals(2,actual.length);
         Assertions.assertEquals(expected, Arrays.stream(actual).toList());
     }
 
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get category by ID")
     void getCategoryById_GivenId_ShouldReturnCategory() throws Exception {
         CategoryDto expected = new CategoryDto()
                 .setId(1L)
-                .setName("Category")
-                .setDescription("Description");
+                .setName("Category 1")
+                .setDescription("Description 1");
 
         MvcResult result = mockMvc.perform(
                         get("/categories/{id}", expected.getId())
@@ -184,29 +199,42 @@ class CategoryControllerTest {
         Assertions.assertEquals(actual.getName(), updateCategory.getName());
     }
 
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get books by category ID")
     void getBooksByCategoryId_GivenId_ShouldReturnBook() throws Exception {
-        BookDtoWithoutCategoryIds expected = new BookDtoWithoutCategoryIds()
+        List<BookDtoWithoutCategoryIds> expected = new ArrayList<>();
+        expected.add(new BookDtoWithoutCategoryIds()
                 .setId(1L)
-                .setTitle("Title")
-                .setAuthor("Author")
-                .setPrice(BigDecimal.valueOf(123))
-                .setDescription("Description")
-                .setCoverImage("image.jpg");
+                .setTitle("Title 1")
+                .setAuthor("Author 1")
+                .setPrice(BigDecimal.valueOf(111))
+                .setDescription("Description 1")
+                .setCoverImage("image1.jpg"));
 
         MvcResult result = mockMvc.perform(
-                        get("/categories/{id}/books", expected.getId())
+                        get("/categories/{id}/books", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
                 .andReturn();
 
-        BookDtoWithoutCategoryIds actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), BookDtoWithoutCategoryIds.class
+        BookDtoWithoutCategoryIds[] actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookDtoWithoutCategoryIds[].class
         );
 
-        Assertions.assertEquals(actual.getTitle(), expected.getTitle());
+        Assertions.assertEquals(1,actual.length);
+        EqualsBuilder.reflectionEquals(expected, actual, "id");
+    }
+
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Test
+    @DisplayName("Delete a category")
+    void delete_ValidCategoryId_Success() throws Exception {
+        mockMvc.perform(
+                        delete("/categories/{id}", 3L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent());
     }
 }
