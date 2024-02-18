@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class IsbnValidation implements ConstraintValidator<Isbn, String> {
     private static final String PATTERN_OF_ISBN =
-            "^(?=(?:\\\\D*\\\\d){10}(?:(?:\\\\D*\\\\d){3})?$)[\\\\d-]+$";
+            "^(?=(?:[^0-9]*[0-9]){10}(?:(?:[^0-9]*[0-9]){3})?$)[\\d-]+$";
 
     @Override
     public boolean isValid(String isbn, ConstraintValidatorContext constraintValidatorContext) {
