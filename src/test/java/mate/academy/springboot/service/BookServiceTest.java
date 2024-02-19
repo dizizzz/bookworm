@@ -19,7 +19,6 @@ import mate.academy.springboot.mapper.BookMapper;
 import mate.academy.springboot.model.Book;
 import mate.academy.springboot.model.Category;
 import mate.academy.springboot.repository.book.BookRepository;
-import mate.academy.springboot.repository.category.CategoryRepository;
 import mate.academy.springboot.service.impl.BookServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,9 +42,6 @@ class BookServiceTest {
     private BookMapper bookMapper;
     @InjectMocks
     private BookServiceImpl bookService;
-
-    @Mock
-    private CategoryRepository categoryRepository;
 
     private Book book;
     private BookDto bookDto;
