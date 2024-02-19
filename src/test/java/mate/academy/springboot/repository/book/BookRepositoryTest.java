@@ -1,8 +1,7 @@
-package mate.academy.springboot.repository;
+package mate.academy.springboot.repository.book;
 
 import java.util.List;
 import mate.academy.springboot.model.Book;
-import mate.academy.springboot.repository.book.BookRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
