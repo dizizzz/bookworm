@@ -3,6 +3,7 @@ package mate.academy.springboot.dto.user;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.experimental.Accessors;
 import mate.academy.springboot.validation.FieldMatch;
 import org.hibernate.validator.constraints.Length;
 
@@ -12,6 +13,7 @@ import org.hibernate.validator.constraints.Length;
         message = "Passwords do not match!"
 )
 @Data
+@Accessors(chain = true)
 public class UserRegistrationRequestDto {
     @NotBlank
     @Email
