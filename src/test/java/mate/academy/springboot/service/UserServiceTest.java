@@ -12,7 +12,6 @@ import mate.academy.springboot.mapper.UserMapper;
 import mate.academy.springboot.model.Role;
 import mate.academy.springboot.model.RoleName;
 import mate.academy.springboot.model.User;
-import mate.academy.springboot.repository.role.RoleRepository;
 import mate.academy.springboot.repository.user.UserRepository;
 import mate.academy.springboot.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
