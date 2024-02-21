@@ -1,25 +1,21 @@
 package mate.academy.springboot.controller;
 
+import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import javax.sql.DataSource;
 import lombok.SneakyThrows;
-import mate.academy.springboot.dto.book.BookDtoWithoutCategoryIds;
 import mate.academy.springboot.dto.category.CategoryDto;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,10 +27,8 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CategoryControllerTest {
@@ -107,72 +101,52 @@ class CategoryControllerTest {
                 .setName("Category 4")
                 .setDescription("Description 4");
 
-        CategoryDto expected = new CategoryDto()
-                .setId(4L)
-                .setName(requestDto.getName())
-                .setDescription(requestDto.getDescription());
-
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                 post("/categories")
                         .content(jsonRequest)
                         .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        CategoryDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), CategoryDto.class
-        );
-        Assertions.assertNotNull(actual);
-        Assertions.assertNotNull(actual.getId());
-        EqualsBuilder.reflectionEquals(expected, actual,"id");
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").value(4L))
+                .andExpect(jsonPath("$.name").value(requestDto.getName()))
+                .andExpect(jsonPath("$.description").value(requestDto.getDescription()));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get all categories")
     void getAll_GivenCategories_ShouldReturnAllCategories() throws Exception {
-        List<CategoryDto> expected = new ArrayList<>();
-        expected.add(new CategoryDto()
-                .setId(1L).setName("Category 1").setDescription("Description 1"));
-        expected.add(new CategoryDto()
-                .setId(2L).setName("Category 2").setDescription("Description 2"));
-
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/categories")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        CategoryDto[] actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), CategoryDto[].class
-        );
-        Assertions.assertEquals(2,actual.length);
-        Assertions.assertEquals(expected, Arrays.stream(actual).toList());
+                .andExpect(jsonPath("$.length()", is(2)))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].id", is(1)))
+                .andExpect(jsonPath("$[0].name", is("Category 1")))
+                .andExpect(jsonPath("$[0].description", is("Description 1")))
+                .andExpect(jsonPath("$[1].id", is(2)))
+                .andExpect(jsonPath("$[1].name", is("Category 2")))
+                .andExpect(jsonPath("$[1].description", is("Description 2")));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get category by ID")
     void getCategoryById_GivenId_ShouldReturnCategory() throws Exception {
-        CategoryDto expected = new CategoryDto()
-                .setId(1L)
-                .setName("Category 1")
-                .setDescription("Description 1");
-
-        MvcResult result = mockMvc.perform(
-                        get("/categories/{id}", expected.getId())
+        Long categoryId = 1L;
+        mockMvc.perform(
+                        get("/categories/{id}", categoryId)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-        CategoryDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), CategoryDto.class
-        );
-
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is("Category 1")))
+                .andExpect(jsonPath("$.description", is("Description 1")));
     }
 
     @WithMockUser(username = "admin", roles = {"ADMIN"})
@@ -184,47 +158,33 @@ class CategoryControllerTest {
                 .setName("Category new")
                 .setDescription("Description new");
 
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         put("/categories/{id}", updateId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(updateCategory))
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        CategoryDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), CategoryDto.class
-        );
-
-        Assertions.assertEquals(actual.getName(), updateCategory.getName());
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is(updateCategory.getName())))
+                .andExpect(jsonPath("$.description", is(updateCategory.getDescription())));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get books by category ID")
     void getBooksByCategoryId_GivenId_ShouldReturnBook() throws Exception {
-        List<BookDtoWithoutCategoryIds> expected = new ArrayList<>();
-        expected.add(new BookDtoWithoutCategoryIds()
-                .setId(1L)
-                .setTitle("Title 1")
-                .setAuthor("Author 1")
-                .setPrice(BigDecimal.valueOf(111))
-                .setDescription("Description 1")
-                .setCoverImage("image1.jpg"));
-
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/categories/{id}/books", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        BookDtoWithoutCategoryIds[] actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), BookDtoWithoutCategoryIds[].class
-        );
-
-        Assertions.assertEquals(1,actual.length);
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+                .andExpect(jsonPath("$[0].id", is(1)))
+                .andExpect(jsonPath("$[0].title", is("Title 1")))
+                .andExpect(jsonPath("$[0].author", is("Author 1")))
+                .andExpect(jsonPath("$[0].price", is(111)))
+                .andExpect(jsonPath("$[0].description", is("Description 1")))
+                .andExpect(jsonPath("$[0].coverImage", is("image1.jpg")));
     }
 
     @WithMockUser(username = "admin", roles = {"ADMIN"})

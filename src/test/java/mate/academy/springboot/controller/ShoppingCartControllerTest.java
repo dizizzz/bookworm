@@ -1,11 +1,13 @@
 package mate.academy.springboot.controller;
 
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +23,6 @@ import mate.academy.springboot.model.Role;
 import mate.academy.springboot.model.RoleName;
 import mate.academy.springboot.model.User;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,10 +40,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ShoppingCartControllerTest {
@@ -145,23 +144,15 @@ class ShoppingCartControllerTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
-        MvcResult result = mockMvc.perform(
+        System.out.println(jsonRequest);
+        mockMvc.perform(
                         post("/cart")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        ShoppingCartResponseDto expected = new ShoppingCartResponseDto()
-                .setUserId(user.getId()).setCartItems(Set.of(requestDto));
-
-        ShoppingCartResponseDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), ShoppingCartResponseDto.class
-        );
-        Assertions.assertNotNull(actual);
-        Assertions.assertNotNull(actual.getId());
-        EqualsBuilder.reflectionEquals(expected, actual,"id");
+                .andExpect(jsonPath("$.userId", is(user.getId().intValue())))
+                .andExpect(jsonPath("$.cartItems").exists());
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
@@ -180,19 +171,14 @@ class ShoppingCartControllerTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(expected);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/cart")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        ShoppingCartResponseDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), ShoppingCartResponseDto.class
-        );
-
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+                .andExpect(jsonPath("$.userId", is(expected.getUserId().intValue())))
+                .andExpect(jsonPath("$.cartItems[0].quantity", is(requestDto.getQuantity())));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
@@ -202,14 +188,6 @@ class ShoppingCartControllerTest {
         CartItemRequestUpdateDto updateDto = new CartItemRequestUpdateDto();
         updateDto.setQuantity(4);
 
-        CartItemRequestDto requestDto = new CartItemRequestDto()
-                .setQuantity(updateDto.getQuantity());
-
-        ShoppingCartResponseDto expected = new ShoppingCartResponseDto()
-                .setId(1L)
-                .setUserId(user.getId())
-                .setCartItems(Set.of(requestDto));
-
         Long cartItemId = 1L;
 
         Authentication authentication =
@@ -218,21 +196,15 @@ class ShoppingCartControllerTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(updateDto);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         put("/cart/cart-items/{cartItemId}", cartItemId)
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        ShoppingCartResponseDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), ShoppingCartResponseDto.class
-        );
-
-        Assertions.assertEquals(expected.getId(), actual.getId());
-        Assertions.assertEquals(expected.getUserId(), actual.getUserId());
-        Assertions.assertEquals(expected.getCartItems(), actual.getCartItems());
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.userId", is(user.getId().intValue())))
+                .andExpect(jsonPath("$.cartItems[0].quantity", is(updateDto.getQuantity())));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})

@@ -1,30 +1,25 @@
 package mate.academy.springboot.controller;
 
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import mate.academy.springboot.dto.order.OrderItemResponseDto;
 import mate.academy.springboot.dto.order.OrderRequestDto;
-import mate.academy.springboot.dto.order.OrderResponseDto;
 import mate.academy.springboot.model.Role;
 import mate.academy.springboot.model.RoleName;
 import mate.academy.springboot.model.User;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,10 +36,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OrderControllerTest {
@@ -155,7 +148,7 @@ class OrderControllerTest {
     @DisplayName("Create a new order")
     void addOrder_ValidRequestDto_Success() throws Exception {
         OrderItemResponseDto orderItemResponseDto = new OrderItemResponseDto()
-                .setId(1L)
+                .setId(2L)
                 .setQuantity(2);
 
         OrderRequestDto requestDto = new OrderRequestDto()
@@ -167,29 +160,19 @@ class OrderControllerTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         post("/orders")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        OrderResponseDto expected = new OrderResponseDto()
-                .setId(1L)
-                .setUserId(user.getId())
-                .setStatus("NEW")
-                .setOrderDate(LocalDateTime.of(2024,2, 18, 17, 24, 1))
-                .setTotal(BigDecimal.valueOf(222))
-                .setOrderItems(Set.of(orderItemResponseDto));
-
-        OrderResponseDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), OrderResponseDto.class
-        );
-
-        Assertions.assertNotNull(actual);
-        Assertions.assertNotNull(actual.getId());
-        EqualsBuilder.reflectionEquals(expected, actual,"id");
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.userId").value(user.getId()))
+                .andExpect(jsonPath("$.status").value("NEW"))
+                .andExpect(jsonPath("$.total").value(222))
+                .andExpect(jsonPath("$.orderItems[0].id").value(orderItemResponseDto.getId()))
+                .andExpect(jsonPath("$.orderItems[0].quantity")
+                        .value(orderItemResponseDto.getQuantity()));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
@@ -200,93 +183,68 @@ class OrderControllerTest {
                 .setId(1L)
                 .setQuantity(2);
 
-        List<OrderResponseDto> expected = new ArrayList<>();
-        expected.add(new OrderResponseDto()
-                .setId(1L)
-                .setUserId(user.getId())
-                .setOrderItems(Set.of(orderItemResponseDto))
-                .setOrderDate(LocalDateTime.of(2024,2, 18, 17, 24, 1))
-                .setTotal(BigDecimal.valueOf(121))
-                .setStatus("NEW"));
-
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
         when(authenticationManager.authenticate(authentication)).thenReturn(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(user);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/orders")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        OrderResponseDto[] actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), OrderResponseDto[].class
-        );
-        Assertions.assertEquals(1,actual.length);
-        Assertions.assertEquals(expected, Arrays.stream(actual).toList());
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].userId").value(user.getId()))
+                .andExpect(jsonPath("$[0].status").value("NEW"))
+                .andExpect(jsonPath("$[0].orderDate").value("2024-02-18T17:24:01"))
+                .andExpect(jsonPath("$[0].total").value(121))
+                .andExpect(jsonPath("$[0].orderItems[0].id").value(orderItemResponseDto.getId()))
+                .andExpect(jsonPath("$[0].orderItems[0].quantity")
+                        .value(orderItemResponseDto.getQuantity()));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get all order items")
     void getOrderItems_GivenId_ShouldReturnOrderItem() throws Exception {
-        List<OrderItemResponseDto> expected = new ArrayList<>();
-        expected.add(new OrderItemResponseDto()
-                .setId(1L)
-                .setQuantity(2));
-
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
         when(authenticationManager.authenticate(authentication)).thenReturn(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(user);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/orders/{orderId}/items", 1L)
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        OrderItemResponseDto[] actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), OrderItemResponseDto[].class
-        );
-
-        Assertions.assertEquals(1,actual.length);
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+                .andExpect(jsonPath("$.length()", is(1)))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].quantity").value(2));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
     @Test
     @DisplayName("Get the order item by id")
     void getOrderItemById_GivenId_ShouldReturnOrderItem() throws Exception {
-        OrderItemResponseDto expected = new OrderItemResponseDto()
-                .setId(1L)
-                .setQuantity(2);
-
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
         when(authenticationManager.authenticate(authentication)).thenReturn(authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(user);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/orders/{orderId}/items/{itemId}", 1L, 1L)
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        OrderItemResponseDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), OrderItemResponseDto.class
-        );
-
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.quantity").value(2));
     }
 }

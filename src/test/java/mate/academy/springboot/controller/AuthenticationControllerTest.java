@@ -1,10 +1,10 @@
 package mate.academy.springboot.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +13,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import mate.academy.springboot.dto.user.UserLoginRequestDto;
-import mate.academy.springboot.dto.user.UserLoginResponseDto;
 import mate.academy.springboot.dto.user.UserRegistrationRequestDto;
-import mate.academy.springboot.dto.user.UserResponseDto;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +29,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -95,19 +92,13 @@ class AuthenticationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         post("/auth/login")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        UserLoginResponseDto actual =
-                objectMapper.readValue(result.getResponse().getContentAsString(),
-                UserLoginResponseDto.class);
-
-        assertNotNull(actual);
+                .andExpect(jsonPath("$.token").exists());
     }
 
     @Test
@@ -121,26 +112,13 @@ class AuthenticationControllerTest {
                 .setLastName("Registration")
                 .setShippingAddress("Address");
 
-        UserResponseDto expected = new UserResponseDto()
-                .setId(3L)
-                .setEmail(userRequestDto.getEmail())
-                .setFirstName(userRequestDto.getFirstName())
-                .setLastName(userRequestDto.getLastName())
-                .setShippingAddress(userRequestDto.getShippingAddress());
-
         String jsonRequest = objectMapper.writeValueAsString(userRequestDto);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         post("/auth/registration")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        UserResponseDto actual = objectMapper.readValue(result.getResponse().getContentAsString(),
-                UserResponseDto.class);
-
-        assertNotNull(actual);
-        assertEquals(expected.getEmail(), actual.getEmail());
+                .andExpect(jsonPath("$.email", is(userRequestDto.getEmail())));
     }
 }
