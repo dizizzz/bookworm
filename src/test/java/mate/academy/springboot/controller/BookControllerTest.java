@@ -1,25 +1,24 @@
 package mate.academy.springboot.controller;
 
+import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import mate.academy.springboot.dto.book.BookDto;
 import mate.academy.springboot.dto.book.CreateBookRequestDto;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,10 +30,8 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BookControllerTest {
@@ -99,30 +96,24 @@ class BookControllerTest {
     @Test
     @DisplayName("Get all books")
     void getAll_GivenBooks_ShouldReturnAllBooks() throws Exception {
-        List<BookDto> expected = new ArrayList<>();
-        expected.add(new BookDto()
-                .setId(1L).setTitle("Title 1").setAuthor("Author 1")
-                .setPrice(BigDecimal.valueOf(111)).setDescription("Description 1")
-                .setCoverImage("image1.jpg")
-                .setCategoryIds(List.of(1L)));
-        expected.add(new BookDto()
-                .setId(2L).setTitle("Title 2").setAuthor("Author 2")
-                .setPrice(BigDecimal.valueOf(222)).setDescription("Description 2")
-                .setCoverImage("image2.jpg")
-                .setCategoryIds(List.of(2L)));
-
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/books")
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        BookDto[] actual = objectMapper.readValue(
-                result.getResponse().getContentAsByteArray(), BookDto[].class
-        );
-        Assertions.assertEquals(2,actual.length);
-        Assertions.assertEquals(expected, Arrays.stream(actual).toList());
+                .andExpect(jsonPath("$.length()", is(2)))
+                .andExpect(jsonPath("$[0].id", is(1)))
+                .andExpect(jsonPath("$[0].title", is("Title 1")))
+                .andExpect(jsonPath("$[0].author", is("Author 1")))
+                .andExpect(jsonPath("$[0].price", is(111)))
+                .andExpect(jsonPath("$[0].description", is("Description 1")))
+                .andExpect(jsonPath("$[0].coverImage", is("image1.jpg")))
+                .andExpect(jsonPath("$[1].id", is(2)))
+                .andExpect(jsonPath("$[1].title", is("Title 2")))
+                .andExpect(jsonPath("$[1].author", is("Author 2")))
+                .andExpect(jsonPath("$[1].price", is(222)))
+                .andExpect(jsonPath("$[1].description", is("Description 2")))
+                .andExpect(jsonPath("$[1].coverImage", is("image2.jpg")));
     }
 
     @WithMockUser(username = "user", roles = {"USER"})
@@ -135,16 +126,17 @@ class BookControllerTest {
                 .setCoverImage("image1.jpg")
                 .setCategoryIds(List.of(1L));
 
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         get("/books/{id}", expected.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-        BookDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), BookDto.class
-        );
-        EqualsBuilder.reflectionEquals(expected, actual, "id");
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.title", is("Title 1")))
+                .andExpect(jsonPath("$.author", is("Author 1")))
+                .andExpect(jsonPath("$.price", is(111)))
+                .andExpect(jsonPath("$.description", is("Description 1")))
+                .andExpect(jsonPath("$.coverImage", is("image1.jpg")));
     }
 
     @WithMockUser(username = "admin", roles = {"ADMIN"})
@@ -159,19 +151,13 @@ class BookControllerTest {
                 .setCoverImage("image1.jpg")
                 .setCategoryIds(List.of(1L));
 
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         put("/books/{id}", updateId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(updateBook))
                 )
                 .andExpect(status().isOk())
-                .andReturn();
-
-        BookDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), BookDto.class
-        );
-
-        Assertions.assertEquals(actual.getTitle(), updateBook.getTitle());
+                .andExpect(jsonPath("$.title", is(updateBook.getTitle())));
     }
 
     @WithMockUser(username = "admin", roles = {"ADMIN"})
@@ -191,29 +177,18 @@ class BookControllerTest {
                 .setCoverImage("image.jpg")
                 .setCategoryIds(List.of(1L));
 
-        BookDto expected = new BookDto()
-                .setTitle(requestDto.getTitle())
-                .setAuthor(requestDto.getAuthor())
-                .setPrice(requestDto.getPrice())
-                .setDescription(requestDto.getDescription())
-                .setCoverImage(requestDto.getCoverImage())
-                .setCategoryIds(requestDto.getCategoryIds());
-
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
-        MvcResult result = mockMvc.perform(
+        mockMvc.perform(
                         post("/books")
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        BookDto actual = objectMapper.readValue(
-                result.getResponse().getContentAsString(), BookDto.class
-        );
-        Assertions.assertNotNull(actual);
-        Assertions.assertNotNull(actual.getId());
-        EqualsBuilder.reflectionEquals(expected, actual,"id");
+                .andExpect(jsonPath("$.title", is(requestDto.getTitle())))
+                .andExpect(jsonPath("$.author", is(requestDto.getAuthor())))
+                .andExpect(jsonPath("$.price", is(requestDto.getPrice().intValue())))
+                .andExpect(jsonPath("$.description", is(requestDto.getDescription())))
+                .andExpect(jsonPath("$.coverImage", is(requestDto.getCoverImage())));
     }
 
     @WithMockUser(username = "admin", roles = {"ADMIN"})
