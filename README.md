@@ -1,5 +1,5 @@
-# Bookstore API
-Welcome to the Bookstore project! This project is inspired by the implementation of an application for an online bookstore.
+# Bookworm 📖🪱
+Welcome to the Bookworm project! This project is inspired by the implementation of an application for an online bookstore.
 
 ## Table of Contents
 - [Technologies Used](#technologies-used)
